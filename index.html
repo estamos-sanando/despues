@@ -146,10 +146,17 @@
         <h1 class="font-serif text-5xl font-semibold mb-3 tracking-tight">Después</h1>
         <p class="text-textMuted text-lg mb-2">Lo que sentís también importa</p>
         <p class="text-textDim text-sm max-w-xs text-center mb-12 leading-relaxed">Un espacio seguro para registrar, reflexionar y cuidarte.</p>
-        <div class="w-full max-w-xs space-y-3">
-            <input type="password" x-model="pinInput" @keydown.enter="checkPIN()" placeholder="Ingresa tu PIN" class="input-field w-full p-4 text-center text-2xl tracking-widest text-white" maxlength="4">
+        <!-- FIRST TIME SETUP -->
+        <div class="w-full max-w-xs space-y-3" x-show="isFirstTime" style="display: none;">
+            <p class="text-center text-primary font-medium mb-4 text-sm">Personalizá tu espacio</p>
+            <input type="text" x-model="userName" @keydown.enter="setupAccount()" placeholder="¿Cómo te llamás?" class="input-field w-full p-4 text-center text-lg text-white mb-2">
+            <button @click="setupAccount()" class="btn-primary w-full py-4 rounded-2xl font-semibold text-white text-lg glow-violet">Comenzar</button>
+        </div>
+
+        <!-- REGULAR LOGIN -->
+        <div class="w-full max-w-xs space-y-3" x-show="!isFirstTime">
+            <input x-show="hasCustomPIN" type="password" x-model="pinInput" @keydown.enter="checkPIN()" placeholder="Ingresá tu PIN" class="input-field w-full p-4 text-center text-2xl tracking-widest text-white" maxlength="4">
             <button @click="checkPIN()" class="btn-primary w-full py-4 rounded-2xl font-semibold text-white text-lg glow-violet">Entrar</button>
-            <p class="text-textDim text-xs text-center mt-4">PIN por defecto: 1234</p>
         </div>
     </div>
 
@@ -291,11 +298,11 @@
     <div x-show="view === 'registro'" class="min-h-screen pb-28 px-6 pt-6 relative z-10">
         <div class="mb-8">
             <div class="flex justify-between items-center mb-3">
-                <span class="text-sm text-textMuted">Paso <span class="text-white font-semibold" x-text="regStep"></span> de 7</span>
+                <span class="text-sm text-textMuted">Paso <span class="text-white font-semibold" x-text="regStep"></span> de 4</span>
                 <span class="text-xs text-textDim bg-surface px-3 py-1 rounded-full" x-text="stepTitles[regStep - 1]"></span>
             </div>
             <div class="h-2 bg-surface rounded-full overflow-hidden">
-                <div class="h-full gradient-primary rounded-full progress-bar" :style="`width: ${(regStep / 7) * 100}%`"></div>
+                <div class="h-full gradient-primary rounded-full progress-bar" :style="`width: ${(regStep / 4) * 100}%`"></div>
             </div>
         </div>
 
@@ -359,79 +366,6 @@
 
         <div x-show="regStep === 3" class="fade-up space-y-6">
             <div class="text-center mb-4">
-                <div class="w-16 h-16 rounded-2xl bg-accent2/10 flex items-center justify-center mx-auto mb-4"><i data-lucide="radar" class="w-8 h-8 text-accent2"></i></div>
-                <h3 class="font-serif text-2xl font-semibold mb-2">Rueda de la Vida Sexual</h3>
-                <p class="text-textMuted text-sm">Calificá del 1 al 10 cada dimensión</p>
-            </div>
-            <div class="space-y-4">
-                <template x-for="dimension in sexualDimensions">
-                    <div class="bg-card rounded-2xl p-4 border border-white/5">
-                        <div class="flex justify-between mb-2"><label class="text-sm font-medium" x-text="dimension.name"></label><span class="text-sm text-primary font-bold" x-text="dimension.value + '/10'"></span></div>
-                        <input type="range" min="1" max="10" x-model="dimension.value" class="w-full accent-primary">
-                        <p class="text-xs text-textDim mt-1" x-text="dimension.desc"></p>
-                    </div>
-                </template>
-            </div>
-            <div class="flex gap-3">
-                <button @click="regStep--" class="flex-1 py-4 rounded-xl border border-white/10 font-semibold text-textMuted hover:bg-card transition-all">Atrás</button>
-                <button @click="regStep++" class="flex-[2] btn-primary py-4 rounded-xl font-semibold">Continuar</button>
-            </div>
-        </div>
-
-        <div x-show="regStep === 4" class="fade-up space-y-6">
-            <div class="text-center mb-4">
-                <div class="w-16 h-16 rounded-2xl bg-yellow/10 flex items-center justify-center mx-auto mb-4"><i data-lucide="brain" class="w-8 h-8 text-yellow"></i></div>
-                <h3 class="font-serif text-2xl font-semibold mb-2">Pensamiento automático</h3>
-                <p class="text-textMuted text-sm">¿Qué pensamiento surgió?</p>
-            </div>
-            <textarea x-model="reg.thought" @input="detectDistortions()" rows="4" class="input-field w-full p-4 text-white resize-none" placeholder="Escribí lo que vino a tu mente..."></textarea>
-            <div x-show="detectedDistortions.length > 0" class="bg-card rounded-2xl p-4 border border-yellow/20">
-                <p class="text-xs text-yellow font-semibold mb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i>Posibles distorsiones cognitivas:</p>
-                <div class="flex flex-wrap gap-2">
-                    <template x-for="dist in detectedDistortions">
-                        <button @click="applyReframe(dist)" class="distortion-tag bg-yellow/20 text-yellow border border-yellow/30" x-text="dist.name"></button>
-                    </template>
-                </div>
-                <div x-show="currentReframe" class="mt-3 p-3 bg-surface rounded-xl">
-                    <p class="text-xs text-textDim mb-1">Reencuadre sugerido:</p>
-                    <p class="text-sm text-green" x-text="currentReframe"></p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button @click="regStep--" class="flex-1 py-4 rounded-xl border border-white/10 font-semibold text-textMuted hover:bg-card transition-all">Atrás</button>
-                <button @click="regStep++" class="flex-[2] btn-primary py-4 rounded-xl font-semibold">Continuar</button>
-            </div>
-        </div>
-
-        <div x-show="regStep === 5" class="fade-up space-y-6">
-            <div class="text-center mb-4">
-                <div class="w-16 h-16 rounded-2xl bg-green/10 flex items-center justify-center mx-auto mb-4"><i data-lucide="mic" class="w-8 h-8 text-green"></i></div>
-                <h3 class="font-serif text-2xl font-semibold mb-2">Grabación de voz</h3>
-                <p class="text-textMuted text-sm">Contá cómo te sentís (opcional)</p>
-            </div>
-            <div class="bg-card rounded-3xl p-8 border border-white/5 text-center">
-                <div x-show="!isRecording" class="space-y-4">
-                    <button @click="startRecording()" class="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mx-auto hover:scale-110 transition-transform glow-violet"><i data-lucide="mic" class="w-10 h-10 text-white"></i></button>
-                    <p class="text-sm text-textMuted">Tocá para grabar</p>
-                </div>
-                <div x-show="isRecording" class="space-y-4">
-                    <div class="voice-wave justify-center"><div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div><div class="voice-bar"></div></div>
-                    <p class="text-sm text-textMuted">Grabando... <span x-text="recordingTime"></span>s</p>
-                    <button @click="stopRecording()" class="w-16 h-16 rounded-full bg-red flex items-center justify-center mx-auto hover:scale-110 transition-transform"><i data-lucide="square" class="w-8 h-8 text-white"></i></button>
-                </div>
-                <div x-show="voiceTranscript" class="mt-4 p-4 bg-surface rounded-xl text-left">
-                    <p class="text-xs text-textDim mb-2">Transcripción:</p>
-                    <p class="text-sm" x-text="voiceTranscript"></p>
-                </div>
-            </div>
-            <div class="flex gap-3">
-                <button @click="regStep--" class="flex-1 py-4 rounded-xl border border-white/10 font-semibold text-textMuted hover:bg-card transition-all">Atrás</button>
-                <button @click="regStep++" class="flex-[2] btn-primary py-4 rounded-xl font-semibold">Continuar</button>
-            </div>
-        </div>
-
-        <div x-show="regStep === 6" class="fade-up space-y-6">
-            <div class="text-center mb-4">
                 <div class="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><i data-lucide="activity" class="w-8 h-8 text-accent"></i></div>
                 <h3 class="font-serif text-2xl font-semibold mb-2">Body Scan</h3>
                 <p class="text-textMuted text-sm">Tocá las zonas donde sentís algo</p>
@@ -454,25 +388,48 @@
             </div>
         </div>
 
-        <div x-show="regStep === 7" class="fade-up space-y-6">
+        <div x-show="regStep === 4" class="fade-up space-y-6">
             <div class="text-center mb-4">
-                <div class="w-16 h-16 rounded-2xl bg-red/10 flex items-center justify-center mx-auto mb-4"><i data-lucide="shield-alert" class="w-8 h-8 text-red"></i></div>
-                <h3 class="font-serif text-2xl font-semibold mb-2">Límites</h3>
+                <div class="w-16 h-16 rounded-2xl bg-yellow/10 flex items-center justify-center mx-auto mb-4"><i data-lucide="brain" class="w-8 h-8 text-yellow"></i></div>
+                <h3 class="font-serif text-2xl font-semibold mb-2">Reflexión y Límites</h3>
             </div>
-            <div class="space-y-3">
-                <template x-for="option in ['Sí', 'No', 'No estoy segura']">
-                    <button @click="reg.boundaryCrossed = option" :class="reg.boundaryCrossed === option ? 'gradient-primary text-white border-transparent glow-violet-sm' : 'bg-card border border-white/5 text-textMuted hover:border-red/30'" class="w-full p-4 rounded-xl border text-left font-medium transition-all" x-text="option"></button>
-                </template>
+            
+            <div>
+                <label class="block text-sm text-textDim mb-2 font-medium">¿Qué pensamiento surgió durante o después?</label>
+                <textarea x-model="reg.thought" @input="detectDistortions()" rows="3" class="input-field w-full p-4 text-white resize-none" placeholder="Escribí lo que vino a tu mente..."></textarea>
+                <div x-show="detectedDistortions.length > 0" class="mt-2 bg-card rounded-2xl p-4 border border-yellow/20">
+                    <p class="text-xs text-yellow font-semibold mb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-4 h-4"></i>Posibles distorsiones cognitivas:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="dist in detectedDistortions">
+                            <button @click="applyReframe(dist)" class="distortion-tag bg-yellow/20 text-yellow border border-yellow/30" x-text="dist.name"></button>
+                        </template>
+                    </div>
+                    <div x-show="currentReframe" class="mt-3 p-3 bg-surface rounded-xl">
+                        <p class="text-xs text-textDim mb-1">Reencuadre sugerido:</p>
+                        <p class="text-sm text-green" x-text="currentReframe"></p>
+                    </div>
+                </div>
             </div>
+
+            <div>
+                <label class="block text-sm text-textDim mb-3 font-medium">¿Sentiste que se cruzó algún límite tuyo?</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <template x-for="option in ['Sí', 'No', 'No sé']">
+                        <button @click="reg.boundaryCrossed = option" :class="reg.boundaryCrossed === option ? 'gradient-primary text-white border-transparent glow-violet-sm' : 'bg-card border border-white/5 text-textMuted hover:border-red/30'" class="p-3 rounded-xl border text-sm font-medium transition-all text-center" x-text="option"></button>
+                    </template>
+                </div>
+            </div>
+            
             <div x-show="reg.boundaryCrossed === 'Sí'" class="bg-red/10 border border-red/20 rounded-2xl p-4 fade-up">
                 <div class="flex items-start gap-3">
                     <i data-lucide="heart-handshake" class="w-5 h-5 text-red mt-0.5 flex-shrink-0"></i>
                     <div><p class="text-sm font-medium text-red">Es importante que escuches esto</p><p class="text-xs text-textMuted mt-1">Si sentiste que no querías hacer algo, tus límites son válidos.</p></div>
                 </div>
             </div>
+
             <div class="flex gap-3">
                 <button @click="regStep--" class="flex-1 py-4 rounded-xl border border-white/10 font-semibold text-textMuted hover:bg-card transition-all">Atrás</button>
-                <button @click="saveRegistro()" class="flex-[2] btn-primary py-4 rounded-xl font-semibold">Guardar registro</button>
+                <button @click="saveRegistro()" :disabled="!reg.boundaryCrossed" class="flex-[2] btn-primary py-4 rounded-xl font-semibold disabled:opacity-40">Guardar registro</button>
             </div>
         </div>
     </div>
@@ -1206,7 +1163,7 @@
             <h3 class="font-semibold">Seguridad</h3>
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3"><i data-lucide="shield" class="w-5 h-5 text-textMuted"></i><span class="text-sm">PIN de acceso</span></div>
-                <button @click="changePIN()" class="px-4 py-2 bg-surface rounded-xl text-xs font-medium hover:bg-primary/20 transition-all">Cambiar</button>
+                <button @click="changePIN()" class="px-4 py-2 bg-surface rounded-xl text-xs font-medium hover:bg-primary/20 transition-all" x-text="hasCustomPIN ? 'Cambiar' : 'Activar'"></button>
             </div>
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3"><i data-lucide="eye-off" class="w-5 h-5 text-textMuted"></i><span class="text-sm">Modo discreto</span></div>
@@ -1245,12 +1202,13 @@ const { jsPDF } = window.jspdf;
 function app() {
     return {
         view: 'splash', isLoggedIn: false, decoyMode: false, pinInput: '', realPIN: '1234', decoyPIN: '0000',
-        userName: 'Abril', entries: [], streak: 0, selfCareSuggestions: [], journalEntries: [],
+        isFirstTime: false, hasCustomPIN: false,
+        userName: '', entries: [], streak: 0, selfCareSuggestions: [], journalEntries: [],
         histSearch: '', histFilter: 'Todos',
         regStep: 1, reg: { person: '', relationshipType: '', encounterType: '', emotionsBefore: [], emotionsAfter: [], bodyState: '', thought: '', unmetNeed: '', boundaryCrossed: '' },
         customTagInput: '',
         emotionOptions: ['Ansiedad', 'Tristeza', 'Confusión', 'Vacío', 'Tranquila', 'Ansiosa', 'Insegura', 'Entusiasmada', 'Cansada', 'Curiosa', 'En paz', 'Feliz', 'Triste', 'Desconectada', 'Excitada', 'Vulnerable', 'Empoderada', 'Molesta', 'Otra'],
-        stepTitles: ['Persona', 'Emociones', 'Rueda sexual', 'Pensamientos', 'Voz', 'Cuerpo', 'Límites'],
+        stepTitles: ['Contexto', 'Emociones', 'Cuerpo', 'Reflexión y Límites'],
         sexualDimensions: [
             { name: 'Deseo', value: 5, desc: 'Interés en la actividad sexual' },
             { name: 'Comunicación', value: 5, desc: 'Capacidad de expresar necesidades' },
@@ -1538,8 +1496,22 @@ function app() {
                 this.unlockedMedals = JSON.parse(storedMedals);
                 this.allMedals.forEach(m => { if (this.unlockedMedals.includes(m.id)) m.unlocked = true; });
             }
-            const storedPIN = localStorage.getItem('despues_pin'); if (storedPIN) this.realPIN = storedPIN;
-            const storedName = localStorage.getItem('despues_name'); if (storedName) this.userName = storedName;
+            const storedPIN = localStorage.getItem('despues_pin'); 
+            if (storedPIN && storedPIN !== '1234') {
+                this.realPIN = storedPIN;
+                this.hasCustomPIN = true;
+            } else {
+                this.hasCustomPIN = false;
+                this.realPIN = '1234';
+            }
+            const storedName = localStorage.getItem('despues_name'); 
+            if (storedName && storedName !== 'Abril') {
+                this.userName = storedName;
+                this.isFirstTime = false;
+            } else {
+                this.userName = '';
+                this.isFirstTime = true;
+            }
             const storedEmotions = localStorage.getItem('despues_emotions'); if (storedEmotions) this.emotionOptions = JSON.parse(storedEmotions);
             if (this.entries.length > 0) { this.lastEntry = this.entries[this.entries.length - 1]; this.updateInsights(); }
         },
@@ -1598,10 +1570,24 @@ function app() {
         },
 
         checkPIN() {
-            if (this.pinInput === this.realPIN) { this.isLoggedIn = true; this.view = 'home'; setTimeout(() => lucide.createIcons(), 100); }
+            if (!this.hasCustomPIN || this.pinInput === this.realPIN) { this.isLoggedIn = true; this.view = 'home'; setTimeout(() => lucide.createIcons(), 100); }
             else if (this.pinInput === this.decoyPIN) { this.isLoggedIn = true; this.decoyMode = true; this.view = 'decoy'; }
             else Swal.fire({ title: 'PIN incorrecto', icon: 'error', confirmButtonColor: '#7B3FE4', background: '#141420', color: '#F1F0F4', borderRadius: '24px' });
             this.pinInput = '';
+        },
+
+        setupAccount() {
+            if (!this.userName.trim()) {
+                Swal.fire({ title: 'Por favor, ingresá tu nombre', icon: 'warning', confirmButtonColor: '#7B3FE4', background: '#141420', color: '#F1F0F4' });
+                return;
+            }
+            
+            this.isFirstTime = false;
+            this.saveData();
+            
+            this.isLoggedIn = true; 
+            this.view = 'home'; 
+            setTimeout(() => lucide.createIcons(), 100);
         },
 
         activateSOS() { this.view = 'decoy'; this.decoyMode = true; setTimeout(() => lucide.createIcons(), 100); },
